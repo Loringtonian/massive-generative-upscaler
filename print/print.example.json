@@ -1,0 +1,11 @@
+{
+  "input": "../work/refine/exports/refined.tif",
+  "outputDir": "../work/print",
+  "extend": { "left": 600, "right": 600, "top": 0, "bottom": 0, "period": { "left": 980, "right": 980 }, "blend": 160, "search": 40 },
+  "label": { "text": "YOUR TITLE", "x": 0.5, "y": 0.05, "sizePx": 240, "color": [255, 255, 255], "anchor": "mm", "font": null },
+  "prints": [
+    { "name": "your-image_70x40in_bleed", "sheetInches": [70, 40], "bleedInches": 0.125, "minPpi": 150 },
+    { "name": "your-image_36x24in_300ppi", "sheetInches": [36, 24], "bleedInches": 0.125, "ppi": 300 }
+  ],
+  "saveCanvas": true
+}

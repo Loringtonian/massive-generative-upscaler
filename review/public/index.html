@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Image review</title>
+    <link rel="stylesheet" href="review.css" />
+  </head>
+  <body>
+    <main id="stage">
+      <div id="viewer"></div>
+      <div id="before"></div>
+      <div id="pins"></div>
+      <div id="minimap" aria-label="Full image overview with current detail outlined in red">
+        <img id="overview-image" alt="Full image overview" />
+        <div id="overview-box"></div>
+      </div>
+      <div id="divider" role="slider" tabindex="0" aria-label="Before and after reveal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+        <span>‹ ›</span>
+      </div>
+      <div class="side-picker left-picker">
+        <label for="history-before">LEFT OF DIVIDER</label
+        ><select id="history-before" aria-label="Image on the left"></select
+        ><span id="left-source" class="source-info"></span>
+      </div>
+      <div class="side-picker right-picker">
+        <label for="history-after">RIGHT OF DIVIDER</label
+        ><select id="history-after" aria-label="Image on the right"></select
+        ><span id="right-source" class="source-info"></span>
+      </div>
+      <nav>
+        <button id="fit">Fit</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-in" aria-label="Zoom in">+</button
+        ><button id="swap">Swap sides</button><button id="mark" aria-pressed="false">＋ Mark defect</button
+        ><button id="notes-toggle" aria-expanded="true">Notes</button>
+      </nav>
+      <div class="label" id="before-label"></div>
+      <div class="label" id="after-label"></div>
+      <aside id="notes">
+        <header><strong>Defect review</strong><button id="export">Export notes</button></header>
+        <label>View region<select id="history-tile"></select></label
+        ><label>Saved comparisons<select id="comparison" aria-label="Saved comparison"></select></label>
+        <p class="help">Mark a spot, describe the defect, then save. Pins stay attached as you zoom.</p>
+        <details id="history-panel">
+          <summary>Tile rebuild</summary>
+          <div class="row">
+            <button id="history-compare" type="button">Reload comparison</button><button id="history-rebuild" type="button">Rebuild from left</button>
+          </div>
+          <p class="help">
+            Rebuild makes a new candidate, including print files and viewing tiles. Earlier stages retain their available detail; this does not run a new AI
+            restoration.
+          </p>
+          <p id="history-status" role="status" class="help"></p>
+          <div id="history-results"></div>
+        </details>
+        <div id="list"></div>
+        <form id="editor" hidden>
+          <label>What needs fixing?<textarea id="note" rows="3" maxlength="4000" required></textarea></label
+          ><label
+            >Type<select id="category">
+              <option value="geometry">Changed / misshapen hardware</option>
+              <option value="texture">Texture / invented detail</option>
+              <option value="halo">Halo / oversharpening</option>
+              <option value="other">Other</option>
+            </select></label
+          ><label
+            >Requested fix<select id="action">
+              <option value="rework">Rework this area</option>
+              <option value="restore-before">Restore this area from the before version</option>
+            </select></label
+          ><label>Area size<input id="radius" type="range" min="0.005" max="0.15" step="0.005" value="0.035" /></label
+          ><label
+            >Status<select id="status">
+              <option value="open">Open</option>
+              <option value="fixed">Fixed · needs review</option>
+              <option value="verified">Verified</option>
+            </select></label
+          >
+          <div class="row"><button id="save" type="submit">Save note</button><button id="delete" type="button">Delete</button></div>
+        </form>
+        <p id="message" role="status"></p>
+      </aside>
+    </main>
+    <script src="vendor.js"></script>
+    <script src="review.js"></script>
+  </body>
+</html>

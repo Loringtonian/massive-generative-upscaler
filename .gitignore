@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Work folders and generated output
+work/
+dist/
+site/dist/
+review-data/
+*.work/
+*.log
+
+# Local configs (copy the *.example.json files)
+site/config.json
+review/review.config.json
+refine/config.json
+print/print.json
+
+# Images, rasters and model weights
+*.jpg
+*.jpeg
+*.png
+*.tif
+*.tiff
+*.webp
+*.dzi
+*_files/
+*.raw
+*.pth
+*.safetensors
+*.onnx
+
+# Secrets
+.env
+.env.*
+.dev.vars
+.wrangler/
+.DS_Store

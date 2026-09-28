@@ -1,0 +1,38 @@
+{
+  "input": "../work/your-image_upscaled.png",
+  "workDir": "../work/refine",
+  "target": {
+    "width": 20000,
+    "height": 12500
+  },
+  "density": 300,
+  "tile": {
+    "size": 1536,
+    "overlap": 384
+  },
+  "regions": [[1500, 1000, 17000, 10000]],
+  "skip": [],
+  "protected": [[4000, 3000, 1200, 800]],
+  "registration": {
+    "minInliers": 50,
+    "maxMedianErrorPx": 1.5,
+    "maxScaleDeviation": 0.025,
+    "maxTranslationPx": 25,
+    "ratio": 0.7,
+    "ransacThreshold": 3
+  },
+  "transfer": {
+    "blur": 3,
+    "edgeThreshold": 3,
+    "edgeRange": 15,
+    "strength": 0.45,
+    "maxDelta": 18,
+    "feather": 100,
+    "protectFeather": 45
+  },
+  "output": {
+    "name": "refined",
+    "jpeg": true,
+    "preview": 2400
+  }
+}

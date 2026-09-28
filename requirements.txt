@@ -1,0 +1,8 @@
+# Core: registration, print prep, colour fix, tests
+numpy>=1.24
+pillow>=10.0
+opencv-python-headless>=4.8
+
+# Neural upscalers (upscale/safe_upscale.py, ensemble_patch.py, upscale.py, convert_esrgan.py).
+# Install separately when you need them; model weights are not included:
+#   pip install torch spandrel

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "example-detail",
+    "title": "Example · upscaled base vs refined master (detail)",
+    "before": { "label": "Upscaled base", "version": "example-base-detail", "path": "../refine/qa/example-before.png" },
+    "after": { "label": "Refined master", "version": "example-refined-detail", "path": "../refine/qa/example-after.png" },
+    "overview": {
+      "path": "../refine/exports/preview.jpg",
+      "region": { "x": 0.4, "y": 0.4, "width": 0.1, "height": 0.1 }
+    }
+  }
+]

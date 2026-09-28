@@ -1,0 +1,7 @@
+name = "YOUR_PAGES_PROJECT"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-09-01"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "YOUR_BUCKET"

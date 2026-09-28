@@ -1,0 +1,12 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 160
+target-version = "py310"
+extend-exclude = ["node_modules", "work"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E401", "E402", "E701", "E702", "E731", "E741"]

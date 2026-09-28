@@ -1,0 +1,391 @@
+:root {
+  --bg: #101113;
+  --glass: rgba(20, 24, 30, 0.3);
+  --glass-strong: rgba(20, 26, 34, 0.82);
+  --line: rgba(255, 255, 255, 0.22);
+  --text: #fff;
+  --muted: #aab7c6;
+  --accent: #9dcaff;
+  --top: max(12px, env(safe-area-inset-top));
+  --right: max(12px, env(safe-area-inset-right));
+  --bottom: max(12px, env(safe-area-inset-bottom));
+  --left: max(12px, env(safe-area-inset-left));
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.35 system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+#stage {
+  position: fixed;
+  inset: 0;
+  --split: 10%;
+  background: var(--bg);
+}
+#viewer {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  cursor: grab;
+}
+#viewer:active {
+  cursor: grabbing;
+}
+#before {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  clip-path: inset(0 calc(100% - var(--split)) 0 0);
+}
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  border-radius: 12px;
+  color: var(--text);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+button,
+a,
+label {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Options panel: two checkboxes, and the actions "Get yours" reveals. */
+#panel {
+  position: absolute;
+  top: var(--top);
+  right: var(--right);
+  z-index: 6;
+  padding: 4px;
+  width: max-content;
+  max-width: calc(100vw - var(--left) - var(--right));
+  max-height: calc(100dvh - var(--top) - var(--bottom));
+  overflow: auto;
+}
+.check {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 10px 0 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.check input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex: none;
+}
+#actions {
+  display: grid;
+  gap: 4px;
+  margin: 2px 0 4px;
+  width: 228px;
+  max-width: calc(100vw - var(--left) - var(--right) - 8px);
+}
+#actions[hidden] {
+  display: none;
+}
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  text-decoration: none;
+}
+.action.download {
+  display: block;
+  padding: 8px 6px 6px;
+}
+.action.download .action-label {
+  display: block;
+  padding: 0 6px 6px;
+}
+.chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+.chip {
+  display: block;
+  line-height: 44px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: center;
+}
+@media (hover: hover) {
+  .check:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  a.action:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .chip:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}
+/* Tip link: a plain link styled like the panel, no third-party embed script. */
+#tip {
+  justify-content: center;
+  gap: 9px;
+}
+#print[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: default;
+}
+#print small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.note {
+  margin: 4px 4px 2px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+#fullscreen {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  z-index: 6;
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+#fullscreen[hidden] {
+  display: none;
+}
+
+/* Divider. */
+#divider {
+  position: absolute;
+  left: var(--split);
+  top: 0;
+  bottom: 0;
+  width: 44px;
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  touch-action: none;
+  z-index: 3;
+  outline-offset: -5px;
+}
+#divider::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: #fffe;
+  box-shadow: 0 0 4px #0009;
+}
+#handle {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 52px;
+  border-radius: 26px;
+  display: grid;
+  place-items: center;
+  background: #192029aa;
+  border: 1px solid #ffffffb0;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font-size: 20px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+@media (pointer: coarse) {
+  #divider {
+    width: 52px;
+  }
+  #handle {
+    left: 4px;
+    width: 44px;
+    height: 56px;
+  }
+}
+#divider.attention #handle {
+  animation: compare-nudge 0.45s ease-in-out 2;
+  background: #e6f5ff;
+  color: #092b48;
+  border: 2px solid #fff;
+  box-shadow: 0 0 25px 10px #61baffbb;
+}
+#divider.attention::before {
+  background: #a9ddff;
+  width: 4px;
+  margin-left: -2px;
+  box-shadow: 0 0 18px 5px #62baffbb;
+}
+#divider.attention::after {
+  content: '↔ Drag to compare';
+  position: absolute;
+  top: calc(50% + 48px);
+  left: 34px;
+  white-space: nowrap;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #e6f5fff2;
+  color: #092b48;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 4px 24px #0007;
+  pointer-events: none;
+}
+@keyframes compare-nudge {
+  0%,
+  100% {
+    transform: translateY(-50%) scale(1.25);
+  }
+  25% {
+    transform: translate(-14px, -50%) scale(1.4);
+  }
+  75% {
+    transform: translate(14px, -50%) scale(1.4);
+  }
+}
+
+/* One-time cues: rotate (upright phones only), then zoom. They never block touch. */
+.cue {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  z-index: 7;
+  pointer-events: none;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #fff;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 200;
+  letter-spacing: 0.24em;
+  text-align: center;
+  padding: 22px 28px 22px 34px;
+  background: rgba(12, 18, 25, 0.34);
+  border-radius: 16px;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  text-shadow: 0 2px 16px #0008;
+  max-width: calc(100vw - 32px);
+}
+#zoom-cue {
+  font-size: clamp(24px, 5vw, 56px);
+  white-space: nowrap;
+}
+#rotate-cue {
+  font-size: clamp(18px, 5.4vw, 32px);
+}
+.cue.visible {
+  animation: cue-fade var(--cue-ms, 2000ms) ease-in-out both;
+}
+@keyframes cue-fade {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 0.9;
+  }
+}
+#rotate-cue .phone {
+  transform-origin: 32px 32px;
+}
+#rotate-cue.visible .phone {
+  animation: phone-turn 1.2s ease-in-out 0.3s 2 both;
+}
+@keyframes phone-turn {
+  0%,
+  15% {
+    transform: rotate(0);
+  }
+  55%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
+
+#error {
+  position: absolute;
+  left: var(--left);
+  top: var(--top);
+  max-width: 65%;
+  background: #301b1be6;
+  padding: 12px;
+  border-radius: 8px;
+  display: none;
+  z-index: 8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #divider.attention #handle,
+  #rotate-cue.visible .phone {
+    animation: none;
+  }
+  .cue.visible {
+    animation: none;
+    opacity: 0.9;
+  }
+}
+#human-check {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+#human-check[hidden] {
+  display: none;
+}
+#tip[hidden] {
+  display: none;
+}

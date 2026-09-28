@@ -1,0 +1,18 @@
+{
+  "version": "v1",
+  "title": "Your image · before / after",
+  "description": "An AI-refined, poster-size version of a small photo. Zoom in and compare with the original.",
+  "note": "The fine detail in this image is AI-generated: plausible, not recovered from the original.",
+  "masterTiff": "../work/refine/exports/refined.tif",
+  "masterJpeg": "../work/refine/exports/refined.jpg",
+  "original": "../work/your-image.jpg",
+  "downloadName": "your-image",
+  "downloadBase": "files/",
+  "siteUrl": "https://example.com",
+  "tipUrl": "",
+  "tipLabel": "Support this work",
+  "printUrl": "",
+  "turnstileSiteKey": "YOUR_TURNSTILE_SITE_KEY",
+  "protectedDownloads": true,
+  "humanCheck": false
+}

@@ -1,0 +1,29 @@
+{
+  "name": "massive-generative-upscaler",
+  "version": "0.1.0",
+  "description": "Take a small photo to a huge print: tiled upscaling, generative tile refinement with registration and bounded detail transfer, a before/after review screen, print prep and a download site.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test \"tests/js/*.test.mjs\"",
+    "format": "prettier --write \"**/*.{mjs,js,json,css,html}\"",
+    "format:check": "prettier --check \"**/*.{mjs,js,json,css,html}\"",
+    "prepare-tiles": "node refine/prepare.mjs",
+    "assemble": "node refine/assemble.mjs",
+    "verify": "node refine/verify.mjs",
+    "review": "node review/server.mjs",
+    "site:build": "node site/build.mjs",
+    "site:serve": "node site/serve.mjs"
+  },
+  "dependencies": {
+    "openseadragon": "^6.1.0",
+    "sharp": "^0.34.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.9"
+  }
+}

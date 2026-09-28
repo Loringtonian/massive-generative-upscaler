@@ -1,0 +1,38 @@
+Prompt template for the redraw step
+===================================
+
+Send each crop from inputs/ to your image model with this prompt, and save the result
+under generated/ with the same file name. Fill in the {braces}; delete lines that do not
+apply. Attaching the untouched original photograph of the same area as a second image
+(layout reference only) usually helps the model keep geometry.
+
+--- prompt ---
+
+Use case: precise photo restoration of one crop. Image 1 is the edit target: an
+{WIDTH}x{HEIGHT} crop of an enlarged photograph of {SHORT NEUTRAL DESCRIPTION OF THE SCENE}.
+Image 2, if present, is the untouched original photograph of exactly this area and is the
+authoritative layout reference.
+
+Produce a sharp, natural, high-resolution photograph with exactly the same framing.
+This is a fidelity pass, not a redesign.
+
+Preserve exactly: the full crop composition and dimensions, camera perspective, every
+object silhouette and boundary position, the route of every line, cable or edge, the count
+and position of small repeated features, occlusions, shadows, lighting direction, colours
+and materials. Features that touch the crop border must meet the border at the same place.
+
+Improve only: fine texture ({e.g. fabric weave, foliage, surface grain, brushed metal}),
+clean edges, small regular features where the source supports them, and removal of
+purple/green colour fringes and compression blocks.
+
+Do not: add, remove or move objects; invent text, logos, markings or inscriptions (keep any
+existing text as it is, or leave it soft); smooth surfaces into a plastic look; add painterly
+effects, exaggerated micro-texture or sharpening halos; change the rest of the image when
+only one area is named.
+
+Return a photorealistic image, {OUTPUT SIZE, e.g. 2048x2048}, same crop.
+
+--- optional line for a targeted fix of one area ---
+
+Correct ONLY {the named area, with approximate x/y position in the crop}. Keep every other
+pixel, the framing and the dimensions unchanged. Local correction only.

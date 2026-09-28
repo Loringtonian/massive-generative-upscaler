@@ -1,0 +1,26 @@
+{
+  "port": 8779,
+  "dataDir": "../work/review",
+  "refineWorkDir": "../work/refine",
+  "overview": "../work/refine/exports/preview.jpg",
+  "comparisons": "examples/comparisons.json",
+  "fullImageLabel": "Full image",
+  "current": "current",
+  "defaults": { "left": "source", "right": "current" },
+  "versions": [
+    { "id": "source", "label": "Original photograph", "path": "../work/your-image.jpg" },
+    { "id": "upscaled", "label": "Upscaled base", "path": "../work/refine/base.tif" },
+    { "id": "current", "label": "Refined master", "path": "../work/refine/exports/refined.tif" },
+    {
+      "id": "print-canvas",
+      "label": "Print canvas · extended",
+      "path": "../work/print/canvas.tif",
+      "frame": { "x": -0.03, "y": 0, "width": 1.06 }
+    }
+  ],
+  "exports": [
+    { "name": "24in", "width": 7200 },
+    { "name": "36in", "width": 10800 }
+  ],
+  "rebuild": { "feather": 100, "colorMatchSigma": 60, "seamPad": 64 }
+}
