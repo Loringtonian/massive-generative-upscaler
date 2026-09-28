@@ -12,11 +12,11 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import sharp from 'sharp';
 import { loadReviewConfig } from './config.mjs';
-import { createHistory } from './history.mjs';
+import { createHistory, JOB_ID } from './history.mjs';
 
 const cfg = loadReviewConfig(process.argv[2]);
 const jobId = process.argv[3];
-if (!/^[a-f0-9-]{36}$/.test(jobId || '')) throw Error('Invalid job');
+if (!JOB_ID.test(jobId || '')) throw Error('Invalid job');
 const history = createHistory(cfg);
 const job = path.join(cfg.dataDir, 'jobs', jobId),
   request = JSON.parse(fs.readFileSync(path.join(job, 'request.json')));
@@ -135,9 +135,7 @@ try {
       title: `${tile.id} · rebuilt from ${request.stage} · ${suffix}`,
       before: { label: 'Current master', version: cfg.current, path: path.relative(cfg.dataDir, path.join(job, `${suffix}-before.png`)) },
       after: { label: `Rebuilt from ${request.stage}`, version: jobId, path: path.relative(cfg.dataDir, path.join(job, `${suffix}-after.png`)) },
-      overview: cfg.overview
-        ? { path: path.relative(cfg.dataDir, cfg.overview), region: { x: x / RW, y: y / RH, width: (right - x) / RW, height: (bottom - y) / RH } }
-        : null,
+      overview: history.overview(history.tileRegion({ x, y, width: right - x, height: bottom - y })),
       history: { tile: tile.id, job: jobId },
     });
   }

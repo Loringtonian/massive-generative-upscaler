@@ -3,8 +3,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { JOB_ID } from './history.mjs';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
+
+// Reads a request body as text; null once it passes `limit` characters.
+export async function readBody(req, limit) {
+  let text = '';
+  for await (const chunk of req) {
+    text += chunk;
+    if (text.length > limit) return null;
+  }
+  return text;
+}
 
 export function createHistoryApi(cfg, history, allowedOrigins) {
   const jobsDir = path.join(cfg.dataDir, 'jobs');
@@ -14,7 +25,7 @@ export function createHistoryApi(cfg, history, allowedOrigins) {
   function listJobs() {
     return fs
       .readdirSync(jobsDir)
-      .filter((id) => /^[a-f0-9-]{36}$/.test(id))
+      .filter((id) => JOB_ID.test(id))
       .map((id) => {
         try {
           return JSON.parse(fs.readFileSync(path.join(jobsDir, id, 'status.json')));
@@ -46,13 +57,10 @@ export function createHistoryApi(cfg, history, allowedOrigins) {
       send(res, 403, { error: 'Invalid origin' });
       return true;
     }
-    let text = '';
-    for await (const chunk of req) {
-      text += chunk;
-      if (text.length > 4096) {
-        send(res, 413, { error: 'Request too large' });
-        return true;
-      }
+    const text = await readBody(req, 4096);
+    if (text === null) {
+      send(res, 413, { error: 'Request too large' });
+      return true;
     }
     let data;
     try {

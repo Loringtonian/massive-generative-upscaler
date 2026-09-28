@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const SITE = window.SITE || {};
+  const SITE = window.SITE;
   const W = SITE.width,
     H = SITE.height;
   const stage = document.getElementById('stage');
@@ -125,7 +125,7 @@
       document.body.appendChild(a);
       a.click();
       a.remove();
-    } catch (err) {
+    } catch {
       showError('The download could not start. Please try again.');
     } finally {
       link.innerHTML = label;
@@ -236,7 +236,6 @@
     saveSettings();
     if (getYoursBox.checked && SITE.turnstileSiteKey) loadTurnstile().catch(() => {});
   });
-  if (getYoursBox.checked && SITE.turnstileSiteKey) loadTurnstile().catch(() => {});
 
   // Zooming out past the full view snaps back to it, and a rotation re-fits a fitted view.
   let atHome = true;
@@ -266,7 +265,7 @@
     event.preventDefault = true;
     const raw = event.originalEvent;
     const unit = raw.deltaMode === 1 ? 16 : raw.deltaMode === 2 ? viewer.container.clientHeight : 1;
-    const delta = Number.isFinite(raw.deltaY) ? raw.deltaY * unit : -event.scroll * 60;
+    const delta = raw.deltaY * unit;
     const factor = Math.exp(-Math.max(-240, Math.min(240, delta)) * (raw.ctrlKey ? 0.006 : 0.0025));
     viewer.viewport.zoomBy(factor, viewer.viewport.pointFromPixel(event.position, true));
     viewer.viewport.applyConstraints();

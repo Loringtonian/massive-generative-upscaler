@@ -101,12 +101,14 @@ export function tileGrid(width, height, { size, overlap }, regions = null, skip 
   return tiles;
 }
 
+// Linear ramp from 0 at a tile's border to 1 at `feather` px inside it (capped at 1, not floored).
+export function edgeFeather(x, y, w, h, feather) {
+  return Math.min(1, x / feather, y / feather, (w - 1 - x) / feather, (h - 1 - y) / feather);
+}
+
 // Weight of the detail transfer at one pixel: edge gate x strength x tile feather x protected falloff.
 export function transferWeight({ edge, x, y, w, h, gx, gy }, t, protectedRects) {
-  let weight =
-    Math.min(1, Math.max(0, (edge - t.edgeThreshold) / t.edgeRange)) *
-    t.strength *
-    Math.min(1, x / t.feather, y / t.feather, (w - 1 - x) / t.feather, (h - 1 - y) / t.feather);
+  let weight = Math.min(1, Math.max(0, (edge - t.edgeThreshold) / t.edgeRange)) * t.strength * edgeFeather(x, y, w, h, t.feather);
   for (const [rx, ry, rw, rh] of protectedRects) {
     const dx = Math.max(rx - gx, 0, gx - (rx + rw - 1));
     const dy = Math.max(ry - gy, 0, gy - (ry + rh - 1));

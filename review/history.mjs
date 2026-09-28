@@ -5,6 +5,11 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import sharp from 'sharp';
 
+export const JOB_ID = /^[a-f0-9-]{36}$/;
+const FULL_FRAME = { x: 0, y: 0, width: 1 };
+const FULL_REGION = { x: 0, y: 0, width: 1, height: 1 };
+const PYRAMID_TILE = { size: 512, overlap: 1 };
+
 export function createHistory(cfg) {
   const dataDir = cfg.dataDir;
   const registry = path.join(dataDir, 'comparisons.json');
@@ -42,7 +47,7 @@ export function createHistory(cfg) {
     if (!fs.existsSync(jobs)) return stages;
     const completed = fs
       .readdirSync(jobs)
-      .filter((id) => /^[a-f0-9-]{36}$/.test(id))
+      .filter((id) => JOB_ID.test(id))
       .flatMap((id) => {
         try {
           const state = JSON.parse(fs.readFileSync(path.join(jobs, id, 'status.json')));
@@ -78,7 +83,7 @@ export function createHistory(cfg) {
     await sharp(input, { limitInputPixels: false })
       .withIccProfile('srgb')
       .jpeg({ quality: 100, chromaSubsampling: '4:4:4', mozjpeg: true })
-      .tile({ size: 512, overlap: 1, layout: 'dz', depth: 'onepixel' })
+      .tile({ ...PYRAMID_TILE, layout: 'dz', depth: 'onepixel' })
       .toFile(path.join(parent, 'pyramid'));
   }
   async function fullVersion(id) {
@@ -99,8 +104,8 @@ export function createHistory(cfg) {
       entry.tiles = {
         width: meta.width,
         height: meta.height,
-        tileSize: 512,
-        tileOverlap: 1,
+        tileSize: PYRAMID_TILE.size,
+        tileOverlap: PYRAMID_TILE.overlap,
         minLevel: 0,
         maxLevel: Math.ceil(Math.log2(Math.max(meta.width, meta.height))),
         baseUrl: `/tiles/${id}/`,
@@ -116,7 +121,7 @@ export function createHistory(cfg) {
       title: `${cfg.fullImageLabel} · ${before.label} / ${after.label}`,
       before,
       after,
-      overview: overview({ x: 0, y: 0, width: 1, height: 1 }),
+      overview: overview(FULL_REGION),
       history: { tile: 'full', before: beforeId, after: afterId },
     });
   }
@@ -133,7 +138,7 @@ export function createHistory(cfg) {
     } else {
       const input = stage.path,
         meta = await sharp(input, { limitInputPixels: false }).metadata();
-      const f = stage.frame || { x: 0, y: 0, width: 1 };
+      const f = stage.frame || FULL_FRAME;
       // Reference px -> this version's px.
       const k = meta.width / (f.width * RW);
       const left = Math.round((tile.x - f.x * RW) * k),
@@ -194,7 +199,7 @@ export function createHistory(cfg) {
       }
       const stage = resolveStage(id);
       if (stage.path) {
-        const f = stage.frame || { x: 0, y: 0, width: 1 };
+        const f = stage.frame || FULL_FRAME;
         return {
           label: stage.label,
           version: 'full-' + id,
@@ -220,7 +225,7 @@ export function createHistory(cfg) {
         const meta = await sharp(side.absolute, { limitInputPixels: false }).metadata();
         side.region.height = (side.frame.width * RW * (meta.height / meta.width)) / RH;
       }
-    const limit = keepRegion && context?.overview?.region ? context.overview.region : { x: 0, y: 0, width: 1, height: 1 };
+    const limit = keepRegion && context?.overview?.region ? context.overview.region : FULL_REGION;
     const x = Math.max(left.region.x, right.region.x, limit.x),
       y = Math.max(left.region.y, right.region.y, limit.y);
     const endX = Math.min(left.region.x + left.region.width, right.region.x + right.region.width, limit.x + limit.width);
@@ -259,6 +264,8 @@ export function createHistory(cfg) {
     registry,
     readRows,
     upsert,
+    overview,
+    tileRegion,
     resolveTile,
     allStages,
     resolveStage,

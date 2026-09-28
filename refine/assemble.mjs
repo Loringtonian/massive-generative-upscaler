@@ -8,7 +8,7 @@
 // protected rectangles. Protected rectangles are then copied back from the base pixel for pixel.
 import fs from 'node:fs';
 import sharp from 'sharp';
-import { loadConfig, transferWeight } from './config.mjs';
+import { edgeFeather, loadConfig, transferWeight } from './config.mjs';
 import { preserveProtected } from './preserve.mjs';
 
 sharp.cache({ memory: 128, files: 10, items: 20 });
@@ -59,7 +59,7 @@ for (const tile of manifest.tiles) {
       const delta = Math.max(-t.maxDelta, Math.min(t.maxDelta, hf));
       for (let c = 0; c < 3; c++) out[k + c] = Math.max(0, Math.min(255, Math.round(base[j + c] + delta * weight)));
       // Feathered alpha so overlapping tiles blend instead of overwriting each other.
-      out[k + 3] = Math.round(255 * Math.max(0, Math.min(1, x / t.feather, y / t.feather, (W - 1 - x) / t.feather, (H - 1 - y) / t.feather)));
+      out[k + 3] = Math.round(255 * Math.max(0, edgeFeather(x, y, W, H, t.feather)));
       const adj = Math.abs(delta * weight);
       if (adj >= 0.5) changed++;
       if (adj > maxAdjust) maxAdjust = adj;

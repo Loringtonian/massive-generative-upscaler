@@ -36,11 +36,12 @@ http
       });
       if (req.method === 'HEAD') return res.end();
       await pipeline(fs.createReadStream(file), res);
-    } catch (e) {
+    } catch {
       if (!res.headersSent) {
         res.writeHead(500);
         res.end('Error');
       } else res.destroy();
+      console.error(e.message);
     }
   })
   .listen(port, host, () => console.log(`Site preview: http://${host}:${port}`));

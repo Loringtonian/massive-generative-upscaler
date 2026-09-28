@@ -1,6 +1,21 @@
 (async () => {
   const $ = (id) => document.getElementById(id),
     stage = $('stage');
+  // Appends an <option> unless the <select> already has one with this value; returns the new option or null.
+  function ensureOption(select, value, text) {
+    if (Array.from(select.options).some((o) => o.value === value)) return null;
+    const o = document.createElement('option');
+    o.value = value;
+    o.textContent = text;
+    select.append(o);
+    return o;
+  }
+  async function postJson(url, body) {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const result = await res.json();
+    if (!res.ok) throw Error(result.error);
+    return result;
+  }
   const response = await fetch('/api/review');
   if (!response.ok) throw Error('Could not load review');
   const data = await response.json();
@@ -187,8 +202,7 @@
   function redraw() {
     const r = imageRect();
     if (!r) return;
-    const w = stage.clientWidth,
-      h = stage.clientHeight;
+    const h = stage.clientHeight;
     syncBefore();
     updateOverview(r);
     const v = visibleRect();
@@ -378,13 +392,8 @@
         ['history-after', c.after],
       ]) {
         const value = 'saved-' + side.version;
-        if (!Array.from($(id).options).some((o) => o.value === value)) {
-          const o = document.createElement('option');
-          o.value = value;
-          o.textContent = side.label;
-          o.dataset.saved = 'true';
-          $(id).append(o);
-        }
+        const o = ensureOption($(id), value, side.label);
+        if (o) o.dataset.saved = 'true';
         $(id).value = value;
       }
     }
@@ -413,7 +422,7 @@
     e.preventDefault = true;
     const raw = e.originalEvent,
       unit = raw.deltaMode === 1 ? 16 : raw.deltaMode === 2 ? stage.clientHeight : 1;
-    const delta = Number.isFinite(raw.deltaY) ? raw.deltaY * unit : -e.scroll * 60;
+    const delta = raw.deltaY * unit;
     viewer.viewport.zoomBy(Math.exp(-Math.max(-240, Math.min(240, delta)) * (raw.ctrlKey ? 0.006 : 0.0025)), viewer.viewport.pointFromPixel(e.position, true));
     viewer.viewport.applyConstraints();
   });
@@ -503,9 +512,7 @@
     reopenButton.disabled = true;
     const savedSnapshot = JSON.stringify(defects);
     try {
-      const res = await fetch('/api/review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision, defects }) });
-      const result = await res.json();
-      if (!res.ok) throw Error(result.error);
+      const result = await postJson('/api/review', { revision, defects });
       revision = result.revision;
       dirty = JSON.stringify(defects) !== savedSnapshot;
       message(dirty ? 'Earlier changes saved; newer edits still need saving.' : 'Saved.');
@@ -555,13 +562,7 @@
   async function refreshComparisons() {
     const state = await (await fetch('/api/review')).json();
     data.comparisons = state.comparisons;
-    for (const c of state.comparisons)
-      if (!Array.from($('comparison').options).some((o) => o.value === c.id)) {
-        const o = document.createElement('option');
-        o.value = c.id;
-        o.textContent = c.title;
-        $('comparison').append(o);
-      }
+    for (const c of state.comparisons) ensureOption($('comparison'), c.id, c.title);
   }
   function chooseHistoryTile(d) {
     if (!historyInfo) return;
@@ -579,11 +580,8 @@
     $('comparison').value = id;
     openComparison(c);
   }
-  async function historyRequest(route, body) {
-    const res = await fetch('/api/history/' + route, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const result = await res.json();
-    if (!res.ok) throw Error(result.error);
-    return result;
+  function historyRequest(route, body) {
+    return postJson('/api/history/' + route, body);
   }
   function renderJob(job) {
     $('history-status').textContent =
@@ -596,13 +594,7 @@
     $('history-results').replaceChildren();
     if (job.phase === 'complete') {
       for (const field of ['history-before', 'history-after']) {
-        const id = 'rebuild-' + job.id;
-        if (!Array.from($(field).options).some((o) => o.value === id)) {
-          const o = document.createElement('option');
-          o.value = id;
-          o.textContent = `Rebuild · ${job.tile} from ${job.stage} · ${job.id.slice(0, 8)}`;
-          $(field).append(o);
-        }
+        ensureOption($(field), 'rebuild-' + job.id, `Rebuild · ${job.tile} from ${job.stage} · ${job.id.slice(0, 8)}`);
       }
       job.comparisons.forEach((id, i) => {
         const b = document.createElement('button');
@@ -642,13 +634,7 @@
     try {
       const body = { tile: $('history-tile').value, before: $('history-before').value, after: $('history-after').value };
       if (body.tile === 'detail' || body.before.startsWith('saved-') || body.after.startsWith('saved-')) {
-        const result = await fetch('/api/pair', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ left: body.before, right: body.after, comparison: current.id, keepRegion: body.tile === 'detail' }),
-        });
-        const pair = await result.json();
-        if (!result.ok) throw Error(pair.error);
+        const pair = await postJson('/api/pair', { left: body.before, right: body.after, comparison: current.id, keepRegion: body.tile === 'detail' });
         await showHistoryComparison(pair.id);
       } else {
         const result = await historyRequest('compare', body);
@@ -717,24 +703,11 @@
       o.textContent = t.id.toUpperCase().replaceAll('_', ' · ');
       $('history-tile').append(o);
     }
-    for (const field of ['history-before', 'history-after'])
-      for (const stage of historyInfo.stages) {
-        if (Array.from($(field).options).some((o) => o.value === stage.id)) continue;
-        const o = document.createElement('option');
-        o.value = stage.id;
-        o.textContent = stage.label;
-        $(field).append(o);
-      }
-    for (const field of ['history-before', 'history-after'])
+    for (const field of ['history-before', 'history-after']) {
+      for (const stage of historyInfo.stages) ensureOption($(field), stage.id, stage.label);
       for (const c of data.comparisons.filter((c) => !c.history && !c.selection))
-        for (const side of [c.before, c.after]) {
-          const value = 'saved-' + side.version;
-          if (Array.from($(field).options).some((o) => o.value === value)) continue;
-          const o = document.createElement('option');
-          o.value = value;
-          o.textContent = side.label + ' · saved detail';
-          $(field).append(o);
-        }
+        for (const side of [c.before, c.after]) ensureOption($(field), 'saved-' + side.version, side.label + ' · saved detail');
+    }
     $('history-tile').value = current?.history?.tile || 'full';
     $('history-before').value = historyInfo.defaults.left;
     $('history-after').value = historyInfo.defaults.right;

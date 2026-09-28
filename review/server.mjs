@@ -8,7 +8,7 @@ import { createRequire } from 'node:module';
 import { pipeline } from 'node:stream/promises';
 import { loadReviewConfig } from './config.mjs';
 import { createHistory } from './history.mjs';
-import { createHistoryApi } from './api.mjs';
+import { createHistoryApi, readBody } from './api.mjs';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
 const publicDir = path.join(here, 'public');
@@ -43,11 +43,8 @@ const server = http.createServer(async (req, res) => {
     const comparisons = history.readRows();
     if (url.pathname === '/api/pair' && req.method === 'POST') {
       if (req.headers.origin && !origins().includes(req.headers.origin)) return send(res, 403, { error: 'Invalid origin' });
-      let body = '';
-      for await (const chunk of req) {
-        body += chunk;
-        if (body.length > 4096) return send(res, 413, { error: 'Request too large' });
-      }
+      const body = await readBody(req, 4096);
+      if (body === null) return send(res, 413, { error: 'Request too large' });
       try {
         const data = JSON.parse(body);
         if (typeof data.left !== 'string' || typeof data.right !== 'string') throw Error('Choose both image versions');
@@ -69,11 +66,8 @@ const server = http.createServer(async (req, res) => {
       });
     if (url.pathname === '/api/review' && req.method === 'POST') {
       if (req.headers.origin && !origins().includes(req.headers.origin)) return send(res, 403, { error: 'Invalid origin' });
-      let body = '';
-      for await (const chunk of req) {
-        body += chunk;
-        if (body.length > 1000000) return send(res, 413, { error: 'Too many notes' });
-      }
+      const body = await readBody(req, 1000000);
+      if (body === null) return send(res, 413, { error: 'Too many notes' });
       let data;
       try {
         data = JSON.parse(body);

@@ -1,6 +1,6 @@
 """8-way geometric self-ensemble of an upscaler on one region (4 rotations x flip).
 
-Usage: python3 ensemble_patch.py <input> <weights> <x> <y> <w> <h> [context=48] <out_prefix>
+Usage: python3 ensemble_patch.py <input> <weights> <x> <y> <w> <h> <context, e.g. 48> <out_prefix>
 Writes <out_prefix>_single.png and <out_prefix>_ensemble.png (region only, at model scale).
 Device: UPS_DEV env (default cpu).
 """
@@ -20,7 +20,7 @@ if len(sys.argv) < 9:
     sys.exit(__doc__)
 src, wpath = sys.argv[1], sys.argv[2]
 X, Y, W, H = [int(v) for v in sys.argv[3:7]]  # native region
-CTX = int(sys.argv[7]) if len(sys.argv) > 7 else 48
+CTX = int(sys.argv[7])
 out_pref = sys.argv[8]
 
 d = ModelLoader().load_from_file(wpath)

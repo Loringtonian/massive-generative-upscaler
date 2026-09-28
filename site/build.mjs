@@ -32,7 +32,7 @@ const originalMeta = await sharp(config.original).metadata();
 const masterHash = await sha256(config.masterTiff);
 console.log(`master ${config.version}: ${meta.width} x ${meta.height}, sha256 ${masterHash.slice(0, 12)}…`);
 
-// Zoom tiles: maximum-quality JPEG, same settings as the prototype viewer's pyramid.
+// Zoom tiles: maximum-quality JPEG, same settings as the review screen's pyramid (review/history.mjs).
 const tilesDir = path.join(dist, 'tiles');
 const stampFile = path.join(tilesDir, 'master.sha256');
 const stamp = fs.existsSync(stampFile) ? fs.readFileSync(stampFile, 'utf8').trim() : '';
@@ -43,10 +43,7 @@ if (stamp !== masterHash) {
   await sharp(config.masterTiff, { limitInputPixels: false })
     .jpeg({ quality: 100, chromaSubsampling: '4:4:4', mozjpeg: true })
     .tile({ size: 512, overlap: 1, layout: 'dz', depth: 'onepixel' })
-    .toFile(path.join(tilesDir, 'poster.dzi'));
-  // libvips may name the outputs poster.dzi.dzi / poster.dzi_files; normalise.
-  if (fs.existsSync(path.join(tilesDir, 'poster.dzi_files'))) fs.renameSync(path.join(tilesDir, 'poster.dzi_files'), path.join(tilesDir, 'poster_files'));
-  if (fs.existsSync(path.join(tilesDir, 'poster.dzi.dzi'))) fs.renameSync(path.join(tilesDir, 'poster.dzi.dzi'), path.join(tilesDir, 'poster.dzi'));
+    .toFile(path.join(tilesDir, 'poster')); // writes poster.dzi + poster_files/
   fs.writeFileSync(stampFile, masterHash + '\n');
   console.log(`tiles rebuilt in ${Math.round((Date.now() - started) / 1000)} s`);
 } else {
@@ -92,7 +89,7 @@ for (const d of downloads) {
 const base = config.siteUrl ? config.siteUrl.replace(/\/$/, '') + '/' : '';
 const html = fs
   .readFileSync(path.join(src, 'index.html'), 'utf8')
-  .replace('/*SITE*/{}', JSON.stringify(site))
+  .replace(/\/\*SITE\*\/\s*\{\}/, JSON.stringify(site))
   .replaceAll('{{OG_IMAGE}}', base + 'og.jpg')
   .replaceAll('{{SITE_URL}}', config.siteUrl || '')
   .replaceAll('{{TITLE}}', escapeHtml(config.title || 'Before / after'))

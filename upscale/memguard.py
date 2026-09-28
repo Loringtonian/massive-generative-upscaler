@@ -32,10 +32,7 @@ def avail_gb():
                     return int(line.split()[1]) / 1e6
     except OSError:
         pass
-    try:
-        o = subprocess.run(["vm_stat"], capture_output=True, text=True).stdout
-    except OSError:
-        return 99.0
+    o = subprocess.run(["vm_stat"], capture_output=True, text=True).stdout
     ps, v = 16384, {}
     for l in o.splitlines():
         if "page size of" in l:
@@ -66,7 +63,7 @@ def swap_gb():
     try:
         o = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True).stdout
         return float(o.split("used =")[1].split("M")[0].strip()) / 1024
-    except Exception:
+    except (OSError, IndexError, ValueError):
         return 0.0
 
 
@@ -79,12 +76,11 @@ with open(LOG, "a", buffering=1) as f:
         why = "avail<floor" if a < FLOOR else ("rss>cap" if r > RSS_CAP else None)
         if why:
             f.write(f"!! TRIP {why} avail={a:.2f} rss={r:.2f} swap={s:.2f} -> SIGKILL {PID}\n")
-            try:
-                for c in subprocess.run(["pgrep", "-P", str(PID)], capture_output=True, text=True).stdout.split():
+            for c in subprocess.run(["pgrep", "-P", str(PID)], capture_output=True, text=True).stdout.split() + [str(PID)]:
+                try:
                     os.kill(int(c), signal.SIGKILL)
-                os.kill(PID, signal.SIGKILL)
-            except OSError:
-                pass
+                except ProcessLookupError:
+                    pass
             sys.exit(2)
         time.sleep(2)
     f.write(f"# clean exit; min avail {lo:.2f}GB, peak our-RSS {hi:.2f}GB\n")
