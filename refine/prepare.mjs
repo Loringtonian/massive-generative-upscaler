@@ -42,4 +42,4 @@ const manifest = {
 };
 fs.writeFileSync(p.manifest, JSON.stringify(manifest, null, 2) + '\n');
 console.log(`base ${width} x ${height}; ${tiles.length} crops in ${p.inputs}`);
-console.log(`next: redraw each crop with your image model into ${p.generated}/<same name>.png`);
+console.log(`next: python3 refine/redraw_codex.py <config> (or redraw each crop with your image model) into ${p.generated}/<same name>.png`);

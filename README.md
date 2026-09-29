@@ -1,7 +1,7 @@
 <h1 align="center">massive-generative-upscaler</h1>
 
 <p align="center">
-  <strong>From one 4K photo to a 1.7-metre print, with real-looking detail all the way in.</strong>
+  <strong>From a 2 MB photo to a 1.7-metre print, with real-looking detail all the way in.</strong>
 </p>
 
 <p align="center">
@@ -17,11 +17,12 @@
 
 <p align="center"><sub>A real crop from a real run: 256 × 144 original pixels on the left, the same spot in the finished 20,043 × 12,600 print file on the right.<br>Original photo: SpaceX. This project is not affiliated with SpaceX.</sub></p>
 
-|                       | Original      | Finished print file     |
-| --------------------- | ------------- | ----------------------- |
-| Width × height        | 3,840 × 2,414 | **20,043 × 12,600**     |
-| Pixels                | 9.3 MP        | **252.5 MP** (27× more) |
-| Print size at 300 ppi | 32 × 20 cm    | **170 × 107 cm**        |
+|                       | Original      | Finished print file      |
+| --------------------- | ------------- | ------------------------ |
+| File                  | 1.9 MB JPEG   | **219 MB** lossless TIFF |
+| Width × height        | 3,840 × 2,414 | **20,043 × 12,600**      |
+| Pixels                | 9.3 MP        | **252.5 MP** (27× more)  |
+| Print size at 300 ppi | 32 × 20 cm    | **170 × 107 cm**         |
 
 An upscaler on its own mostly makes a bigger, softer image. This toolkit adds a second, **generative** pass: an
 image model redraws the picture crop by crop, every redraw is locked back onto the
@@ -79,6 +80,17 @@ photo ─► upscale ─► (colour fix) ─► tile ─► YOUR MODEL ─► re
                                                                  download site ◄──────────┘
 ```
 
+## Point your coding agent at it
+
+Open this repo in Claude Code, Codex or any coding agent and say:
+
+> Take my photo `~/Pictures/photo.jpg` to a 60 × 40 inch print. Go.
+
+[`AGENTS.md`](AGENTS.md) walks the agent through every step: what to ask you first,
+the upscale, cutting the tiles, a three-tile pilot you approve, the full redraw through
+Codex, registration, the review screen and the print files. It stops at usage limits
+instead of spending money, and asks you before anything is paid for or published.
+
 ## Quick start
 
 ```bash
@@ -104,8 +116,8 @@ python3 upscale/fix_ca.py work/upscaled.png work/upscaled_defringed.png        #
 cp refine/config.example.json work/refine.json   # edit input, target size, tile size, protected areas
 node refine/prepare.mjs work/refine.json
 
-# 3. Redraw every work/refine/inputs/<id>.png with your image model,
-#    saving each result as work/refine/generated/<id>.png (see "The redraw step")
+# 3. Redraw every tile (Codex route shown; see "The redraw step" for other models)
+python3 refine/redraw_codex.py work/refine.json --scene "short neutral scene description"
 
 # 4. Register, transfer, verify
 python3 refine/register.py work/refine.json
@@ -180,10 +192,29 @@ where the base already has edges.
 If a generated crop is missing, that tile stays unchanged. To skip a tile for good, put
 its id in `skip`.
 
-#### The redraw step: bring your own image model
+#### The redraw step: GPT Image 2 through Codex, or bring your own
 
-There is no model call in this repository. Use any image model you like: a local
-diffusion model, a hosted API, or an assistant's built-in image tool.
+The example at the top was redrawn with **OpenAI's image model through Codex's built-in
+image tool** (documented as GPT Image 2; the tool does not report the model per call),
+paid from a ChatGPT plan with no API key. `refine/redraw_codex.py` automates it:
+
+```bash
+codex login                                      # once, with a ChatGPT plan
+python3 refine/redraw_codex.py work/refine.json --scene "short neutral scene description" --limit 3
+```
+
+- Each tile runs one fresh, short `codex exec` in its own temporary folder that holds only
+  the crop and the prompt. About one minute per tile.
+- `OPENAI_API_KEY` and `CODEX_API_KEY` are removed from the worker's environment, so
+  nothing is billed to an API key.
+- Progress is saved after every tile (`redraw-state.json`); a re-run skips finished tiles.
+- When the plan's usage limit is reached it stops with exit code 30. Run it again after
+  the limit resets. One early measurement put a tile at about 5% of a Codex five-hour
+  window.
+- The tool returns 1254 × 1254 images whatever size you ask for; registration handles it.
+
+Any other image model works too: a local diffusion model, a hosted API, or another
+assistant's image tool. Save each result under `generated/` with the same file name.
 
 ```
 work/refine/inputs/r02_c03.png  ──►  your model + refine/prompt-template.txt  ──►  work/refine/generated/r02_c03.png
@@ -328,7 +359,7 @@ make test        # ruff + prettier check, pytest, node:test
   their sources; output size and ppi are right; changes stay within `strength ×
 maxDelta`; protected regions are pixel-identical; colour stays on the base; print
   math covers bleed, ppi, largest trim, extension and label; the chromatic-aberration
-  scale search works; memguard exits cleanly and trips on its RSS cap; the site builds
+  scale search works; memguard exits cleanly and trips on its RSS cap; the Codex redraw helper (against a fake `codex`) redraws pending tiles, resumes, pauses with exit 30 at a usage limit and never passes API keys to the worker; the site builds
   from the refined output.
 - **node:test** (`tests/js/`): the tile grid and transfer weights; config validation;
   HMAC sign/verify including expiry and tampering; the download and files functions
@@ -344,7 +375,7 @@ GitHub Actions runs `make test` on every push
 
 ```
 upscale/   neural upscaling, memory guard, colour fix
-refine/    prepare → (your model) → register → assemble → verify; prompt template; example config
+refine/    prepare → redraw (Codex or your model) → register → assemble → verify; prompt template; example config
 review/    review server, history/rebuild API, public/ page, example registry and config
 print/     canvas extension, label, bleed/ppi print cutter
 site/      static zoom site + Cloudflare Pages functions for signed downloads
