@@ -40,3 +40,7 @@ print/print.json
 .dev.vars
 .wrangler/
 .DS_Store
+
+# README images
+!docs/*.jpg
+!docs/*.gif

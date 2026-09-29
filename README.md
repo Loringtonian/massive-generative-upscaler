@@ -1,10 +1,32 @@
-# massive-generative-upscaler
+<h1 align="center">massive-generative-upscaler</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![test](https://github.com/Loringtonian/massive-generative-upscaler/actions/workflows/test.yml/badge.svg)](https://github.com/Loringtonian/massive-generative-upscaler/actions/workflows/test.yml)
+<p align="center">
+  <strong>From one 4K photo to a 1.7-metre print, with real-looking detail all the way in.</strong>
+</p>
 
-Take one small photo to a poster-size print file (20,000 px wide at 300 ppi) while
-keeping the photograph's own composition, lighting and colour.
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+  <a href="https://github.com/Loringtonian/massive-generative-upscaler/actions/workflows/test.yml"><img alt="tests" src="https://github.com/Loringtonian/massive-generative-upscaler/actions/workflows/test.yml/badge.svg"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab.svg">
+  <img alt="Node 20+" src="https://img.shields.io/badge/node-20%2B-339933.svg">
+</p>
+
+<p align="center">
+  <img src="docs/before-after.gif" alt="Animated before/after wipe: blocky original pixels on the left, sharp refined detail on the right" width="100%">
+</p>
+
+<p align="center"><sub>A real crop from a real run: 256 × 144 original pixels on the left, the same spot in the finished 20,043 × 12,600 print file on the right.<br>Original photo: SpaceX. This project is not affiliated with SpaceX.</sub></p>
+
+|                       | Original      | Finished print file     |
+| --------------------- | ------------- | ----------------------- |
+| Width × height        | 3,840 × 2,414 | **20,043 × 12,600**     |
+| Pixels                | 9.3 MP        | **252.5 MP** (27× more) |
+| Print size at 300 ppi | 32 × 20 cm    | **170 × 107 cm**        |
+
+An upscaler on its own mostly makes a bigger, softer image. This toolkit adds a second, **generative** pass: an
+image model redraws the picture crop by crop, every redraw is locked back onto the
+photo with feature matching, and only the fine detail is kept. Lighting, colour and
+composition stay the photograph's own.
 
 The toolkit does five things:
 
@@ -23,6 +45,14 @@ The toolkit does five things:
 > and bounded transfer keep the result faithful to the photo's layout, lighting and
 > colour. They do not make invented detail authentic. Describe results as _AI-refined_,
 > not _restored_ or _recovered_.
+
+## Up close
+
+<p align="center">
+  <img src="docs/detail.jpg" alt="Side by side: a blurry, blocky crop of braided hoses on the left, the same crop with sharp weave, clamps and tape on the right" width="100%">
+</p>
+
+<p align="center"><sub>The same 120 × 100 original pixels, before and after. Braided hose, clamps and tape come out of the blur. The weave is drawn by the image model: it looks right, but it is not recovered data.</sub></p>
 
 ## Pipeline
 
@@ -66,7 +96,7 @@ verifies, and writes everything to `work/demo/`, which git ignores.
 A real run:
 
 ```bash
-# 1. Upscale (needs torch + spandrel and a model file you supply, e.g. a 4x Real-ESRGAN)
+# 1. Upscale (needs torch + spandrel and a model file; see "Which upscale model")
 python3 upscale/safe_upscale.py work/your-image.jpg work/upscaled.png models/your-model.pth 128
 python3 upscale/fix_ca.py work/upscaled.png work/upscaled_defringed.png        # optional
 
@@ -97,7 +127,26 @@ node refine/verify.mjs work/refine.json
 | `convert_esrgan.py` | Renames old ESRGAN checkpoint keys (`model.N.sub…`) to RRDBNet names.                                                                                                                                                                                                                                    |
 | `notify_done.sh`    | Waits for an output file and sends a desktop notification when it appears or when the job stops early. Gives up after about 2.5 h.                                                                                                                                                                       |
 
-Model weights are not included. Download them from the model's own project and check its licence.
+#### Which upscale model
+
+Model weights are not included. These are the ones behind the example at the top:
+
+| Model                                                            | Licence      | How it did                                                                                                                                                                                                                 |
+| ---------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[Real-ESRGAN x4plus](https://github.com/xinntao/Real-ESRGAN)** | BSD-3-Clause | **Used for the final base.** 4× enlargement, then `fix_ca.py`, then the generative refine pass. Weights: [`RealESRGAN_x4plus.pth`](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth). |
+| [DAT-2](https://github.com/zhengchen1999/DAT) (x4)               | Apache-2.0   | Tried first; its 4× output became the comparison base. On a second enlargement it added a mesh pattern. Weights are linked from the project's README ("pretrained models").                                                |
+| Plain Lanczos resize                                             | n/a          | Best for any enlargement **after** the first 4×. A second AI pass invented crack textures (Real-ESRGAN) or a mesh (DAT). `refine/prepare.mjs` does this resize for you when `target` is set.                               |
+
+```bash
+mkdir -p models
+curl -L -o models/RealESRGAN_x4plus.pth \
+  https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+python3 upscale/safe_upscale.py work/your-image.jpg work/upscaled.png models/RealESRGAN_x4plus.pth 128
+```
+
+Any other 4× model that [spandrel](https://github.com/chaiNNer-org/spandrel) can load also
+works; [OpenModelDB](https://openmodeldb.info) lists many. Try a few on one crop with
+`ensemble_patch.py` before you commit to a full run, and check each model's licence.
 
 ### Refine (`refine/`)
 
